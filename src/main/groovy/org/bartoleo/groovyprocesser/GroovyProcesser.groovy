@@ -73,18 +73,23 @@ class GroovyProcesser {
                 try {
                     lastInputText = editorInput.text
                     lastGroovyText = editorGroovy.text
+
                     def buf = new ByteArrayOutputStream()
                     def newOut = new PrintStream(buf)
                     System.out = newOut
+
                     binding.setVariable("input", evaluateInput(editorInput.text))
                     binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); editorInput.text = valore; })
                     def result = shell.evaluate(editorGroovy.text)
+
                     if (result) {
                         editorOutput.text = result.toString()
                     } else {
                         editorOutput.text = ""
                     }
+
                     System.out = saveOut
+
                     editorOutput.text = editorOutput.text + buf.toString()
                     editorOutput.foreground = java.awt.Color.BLACK
                 } catch (Exception ex) {
@@ -121,14 +126,13 @@ class GroovyProcesser {
                         result = slurper.parseText(result)
                     }
                     if (action == "url") {
-                        def slurper = new XmlSlurper()
+                        //TODO: cache!!!!!!!
                         result = result.toURL().getText();
                     }
                     if (action == "file") {
                         result = new File(result).getText();
                     }
                     if (action == "cmd") {
-                        def slurper = new XmlSlurper()
                         def command = result
                         def proc = command.execute()
                         def outStream = new ByteArrayOutputStream(4096)
