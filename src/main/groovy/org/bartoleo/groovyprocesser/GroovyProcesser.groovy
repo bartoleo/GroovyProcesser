@@ -5,6 +5,8 @@ import groovy.swing.SwingBuilder
 
 import javax.swing.*
 import java.awt.*
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.StringSelection
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
@@ -17,14 +19,14 @@ class GroovyProcesser {
     String lastGroovyText = ""
 
     public static void main(String[] args) {
-        new GroovyProcesser().run();
+        new GroovyProcesser().gui();
     }
 
     public GroovyProcesser() {
 
     }
 
-    public void run() {
+    public void gui() {
 
         swing = new SwingBuilder()
         swing.edt {
@@ -35,27 +37,52 @@ class GroovyProcesser {
                     preferredSize: [1024, 800],
             ) {
                 splitPane(id: 'vsplit1', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: 480) {
-                    splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: 320) {
-                        scrollPane() {
-                            editorPane(id: "editorInput", editable: true, font: font,
-                                    keyReleased: { evt ->
-                                        evaluate();
-                                    }
-                            )
+                    panel {
+                        borderLayout(vgap: 5)
+                        toolBar(rollover: true, constraints: BorderLayout.NORTH){
+                            button( text:"load", actionPerformed:{
+                                loadInputAction()
+                            })
                         }
-                        scrollPane() {
-                            editorPane(id: "editorGroovy", editable: true, font: font,
-                                    text: '''input.eachLine{
+                        splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: 320, constraints: BorderLayout.CENTER) {
+                            scrollPane() {
+                                editorPane(id: "editorInput", editable: true, font: font,
+                                        keyReleased: { evt ->
+                                            evaluate();
+                                        }
+                                )
+                            }
+                            panel {
+                                borderLayout(vgap: 5)
+                                toolBar(rollover: true, constraints: BorderLayout.NORTH){
+                                    button( text:"save", actionPerformed:{
+                                        saveAction()
+                                    })
+                                }
+                                scrollPane() {
+                                editorPane(id: "editorGroovy", editable: true, font: font,
+                                        text: '''input.eachLine{
   println "prefisso${it}suffisso"
 }''',
-                                    keyReleased: { evt ->
-                                        evaluate();
-                                    }
-                            )
+                                        keyReleased: { evt ->
+                                            evaluate();
+                                            }
+                                    )
+                                }
+                            }
                         }
+
                     }
-                    scrollPane() {
+                    panel {
+                        borderLayout(vgap: 5)
+                        toolBar(rollover: true, constraints: BorderLayout.NORTH){
+                            button( text:"copy", actionPerformed:{
+                                copyAction()
+                            })
+                        }
+                        scrollPane() {
                         editorPane(id: "editorOutput", editable: false, font: font, background: new java.awt.Color (255, 255, 220))
+                        }
                     }
                 }
             }
@@ -65,6 +92,21 @@ class GroovyProcesser {
         }
     }
 
+    public void loadInputAction(){
+        println "loadInputAction"
+    }
+
+
+    public void saveAction(){
+        println "saveAction"
+    }
+
+    public void copyAction(){
+        swing.doLater {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(new StringSelection(editorOutput.text), null)
+        }
+    }
 
     public void evaluate() {
         swing.doLater {
