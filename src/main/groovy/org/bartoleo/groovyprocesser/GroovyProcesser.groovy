@@ -28,6 +28,9 @@ class GroovyProcesser {
 
     public void gui() {
 
+        System.setProperty("apple.laf.useScreenMenuBar", "true")
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "GroovyProcesser")
+
         swing = new SwingBuilder()
         swing.edt {
             //lookAndFeel 'nimbus'
@@ -59,7 +62,7 @@ class GroovyProcesser {
                                         saveAction()
                                     })
                                 }
-                                scrollPane() {
+                                scrollPane(id: "scrollPaneEditor") {
                                 editorPane(id: "editorGroovy", editable: true, font: font,
                                         text: '''input.eachLine{
   println "prefisso${it}suffisso"
@@ -87,6 +90,7 @@ class GroovyProcesser {
                 }
             }
         }
+        swing.scrollPaneEditor.rowHeaderView = new TextLineNumber(swing.editorGroovy)
         swing.doLater {
             //frame.size = [1024,800]
         }
