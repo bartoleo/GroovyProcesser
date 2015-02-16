@@ -5,8 +5,13 @@ import groovy.swing.SwingBuilder
 
 import javax.swing.*
 import java.awt.*
-import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.StringSelection
+import java.awt.datatransfer.DataFlavor
+import javax.swing.filechooser.FileFilter
+import javax.swing.JFileChooser
+import java.awt.datatransfer.UnsupportedFlavorException
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
@@ -46,6 +51,9 @@ class GroovyProcesser {
                             button( text:"load", actionPerformed:{
                                 loadInputAction()
                             })
+                            button( text:"paste", actionPerformed:{
+                                pasteInputAction()
+                            })
                         }
                         splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: 320, constraints: BorderLayout.CENTER) {
                             scrollPane() {
@@ -58,8 +66,11 @@ class GroovyProcesser {
                             panel {
                                 borderLayout(vgap: 5)
                                 toolBar(rollover: true, constraints: BorderLayout.NORTH){
+                                    button( text:"load", actionPerformed:{
+                                        loadGroovyAction()
+                                    })
                                     button( text:"save", actionPerformed:{
-                                        saveAction()
+                                        saveGroovyAction()
                                     })
                                 }
                                 scrollPane(id: "scrollPaneEditor") {
@@ -97,12 +108,73 @@ class GroovyProcesser {
     }
 
     public void loadInputAction(){
-        println "loadInputAction"
+        def openFileDialog = new JFileChooser(
+                dialogTitle: "Choose an input file",
+                fileSelectionMode: JFileChooser.FILES_ONLY)
+
+        int userSelection = openFileDialog.showOpenDialog()
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToOpen = openFileDialog.getSelectedFile();
+            swing.editorInput.text = fileToOpen.text
+            evaluate()
+        }
+    }
+
+    public String getClipboardContents() {
+        String result = "";
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        //odd: the Object param of getContents is not currently used
+        Transferable contents = clipboard.getContents(null);
+        boolean hasTransferableText =
+            (contents != null) &&
+                    contents.isDataFlavorSupported(DataFlavor.stringFlavor)
+        ;
+        if (hasTransferableText) {
+            try {
+                result = (String)contents.getTransferData(DataFlavor.stringFlavor);
+            }
+            catch (UnsupportedFlavorException | IOException ex){
+                System.out.println(ex);
+                ex.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    public void pasteInputAction(){
+        swing.doLater {
+            editorInput.text = getClipboardContents();
+            evaluate()
+        }
     }
 
 
-    public void saveAction(){
-        println "saveAction"
+    public void loadGroovyAction(){
+        def openFileDialog = new JFileChooser(
+                dialogTitle: "Choose an input groovy file",
+                fileSelectionMode: JFileChooser.FILES_ONLY,
+                fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+
+        int userSelection = openFileDialog.showOpenDialog()
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToOpen = openFileDialog.getSelectedFile();
+            swing.editorGroovy.text = fileToOpen.text
+            evaluate()
+        }
+    }
+
+    public void saveGroovyAction(){
+        def saveFileDialog = new JFileChooser(
+                dialogTitle: "Choose file to save",
+                fileSelectionMode: JFileChooser.FILES_ONLY,
+                //the file filter must show also directories, in order to be able to look into them
+                fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+
+        int userSelection = saveFileDialog.showSaveDialog()
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = saveFileDialog.getSelectedFile();
+            fileToSave.write(swing.editorGroovy.text)
+        }
     }
 
     public void copyAction(){

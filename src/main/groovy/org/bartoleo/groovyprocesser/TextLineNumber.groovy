@@ -9,6 +9,10 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.text.*;
 
+//taken from https://tips4java.wordpress.com/2009/05/23/text-component-line-number/
+//thank you Rob Camick
+//adapted to groovy
+
 /**
  *  This class will display line numbers for a related text component. The text
  *  component must use the same line height for each line. TextLineNumber
