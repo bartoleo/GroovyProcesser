@@ -1,6 +1,7 @@
 package org.bartoleo.groovyprocesser
 
 import groovy.swing.SwingBuilder
+import groovy.ui.text.TextUndoManager
 
 import javax.swing.*
 import java.awt.*
@@ -37,6 +38,9 @@ class GroovyProcesser {
         int height = 800
         int width = 1024
 
+        def editorGroovyUndoManager = new TextUndoManager()
+        def editorInputUndoManager = new TextUndoManager()
+
         swing = new SwingBuilder()
         swing.edt {
             //lookAndFeel 'nimbus'
@@ -45,6 +49,82 @@ class GroovyProcesser {
                     extendedState: JFrame.MAXIMIZED_BOTH,
                     preferredSize: [width, height],
             ) {
+
+                actionUndo = swing.action(name: 'Undo', accelerator: 'ctrl Z') {
+                    def undoManager
+                    def component = swing.frame.mostRecentFocusOwner
+                    if (component == swing.editorGroovy ){
+                        undoManager = editorGroovyUndoManager
+                    }
+                    if (component == swing.editorInput ){
+                        undoManager = editorInputUndoManager
+                    }
+                    if (undoManager &&  undoManager.canUndo()){
+                        undoManager.undo()
+                        evaluateRealTime()
+                    }
+
+                }
+
+                actionRedo = swing.action(name: 'Redo', accelerator: 'ctrl Y') {
+                    def undoManager
+                    def component = swing.frame.mostRecentFocusOwner
+                    if (component == swing.editorGroovy ){
+                        undoManager = editorGroovyUndoManager
+                    }
+                    if (component == swing.editorInput ){
+                        undoManager = editorInputUndoManager
+                    }
+                    if (undoManager &&  undoManager.canRedo()){
+                        undoManager.redo()
+                        evaluateRealTime()
+                    }
+                }
+
+                actionRun = swing.action(name: 'run') {
+                    evaluate()
+                }
+
+                // menu
+                menuBar {
+                    menu('File', mnemonic: 'F') {
+//                        menuItem(action: actionNew)
+//                        menuItem(action: actionOpen)
+//                        menuItem(action: actionSave)
+//                        menuItem(action: actionSaveAs)
+//                        separator()
+//                        menuItem(action: actionExit)
+                    }
+                    menu('Edit', mnemonic: 'E') {
+                        menuItem(action: actionUndo, mnemonic: 'Z' )
+                        menuItem(action: actionRedo, mnemonic: 'Y' )
+                        menuItem(action: actionRun )
+//                        separator()
+//                        menuItem(action: actionCut)
+//                        menuItem(action: actionCopy)
+//                        menuItem(action: actionPaste)
+//                        separator()
+//                        menuItem(action: actionClearOutput)
+                    }
+                    menu('Options', mnemonic: 'O') {
+//                        menuItem(action: actionEditConnections)
+//                        checkBoxMenuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
+//                        menuItem(action: actionOptionsSetTitle)
+//                        //menuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
+//               menuItem 'Preferences'
+                    }
+                    menu('View', mnemonic: 'V') {
+//                        menuItem(action: actionPrevTab)
+//                        menuItem(action: actionNextTab)
+//                        separator()
+//                        menuItem(action: actionKeepTab)
+//                        menuItem(action: actionRemoveTab)
+                    }
+                    menu('Help', mnemonic: 'H') {
+//                        menuItem(action: actionAbout)
+                    }
+                }
+
                 splitPane(id: 'vsplit1', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height/3*2) as int) {
                     panel {
                         borderLayout(vgap: 5)
@@ -60,7 +140,11 @@ class GroovyProcesser {
                             scrollPane() {
                                 editorPane(id: "editorInput", editable: true, font: font,
                                         keyReleased: { evt ->
-                                            evaluate();
+                                            if (evt.isControlDown()&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
+                                                evaluate()
+                                            } else {
+                                                evaluateRealTime()
+                                            }
                                         }
                                 )
                             }
@@ -73,7 +157,8 @@ class GroovyProcesser {
                                     button( text:"save", actionPerformed:{
                                         saveGroovyAction()
                                     })
-                                    comboBox( id:'cmbFile')
+                                    comboBox( id:'cmbFile',  actionPerformed: {println 'cmbFileChanged'})
+                                    checkBox(id: 'chkRunEveryChange', text:'Run Every Change', selected:true)
                                 }
                                 scrollPane(id: "scrollPaneEditor") {
                                 editorPane(id: "editorGroovy", editable: true, font: font,
@@ -81,8 +166,12 @@ class GroovyProcesser {
   println "prefisso${it}suffisso"
 }''',
                                         keyReleased: { evt ->
-                                            evaluate();
+                                            if (evt.isControlDown()&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
+                                                evaluate()
+                                            } else {
+                                                evaluateRealTime()
                                             }
+                                        }
                                     )
                                 }
                             }
@@ -103,12 +192,20 @@ class GroovyProcesser {
                 }
             }
         }
+
+        //add line number to groovy editor
         swing.scrollPaneEditor.rowHeaderView = new TextLineNumber(swing.editorGroovy)
+
+        swing.editorGroovy.getDocument().addUndoableEditListener(editorGroovyUndoManager);
+        swing.editorInput.getDocument().addUndoableEditListener(editorInputUndoManager);
+
         swing.doLater {
             //frame.size = [1024,800]
             cmbFile.addItem("")
             cmbFile.addItem("test")
         }
+
+
     }
 
     public void loadInputAction(){
@@ -120,7 +217,7 @@ class GroovyProcesser {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToOpen = openFileDialog.getSelectedFile();
             swing.editorInput.text = fileToOpen.text
-            evaluate()
+            evaluateRealTime()
         }
     }
 
@@ -148,7 +245,7 @@ class GroovyProcesser {
     public void pasteInputAction(){
         swing.doLater {
             editorInput.text = getClipboardContents();
-            evaluate()
+            evaluateRealTime()
         }
     }
 
@@ -163,7 +260,7 @@ class GroovyProcesser {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToOpen = openFileDialog.getSelectedFile();
             swing.editorGroovy.text = fileToOpen.text
-            evaluate()
+            evaluateRealTime()
         }
     }
 
@@ -188,20 +285,28 @@ class GroovyProcesser {
         }
     }
 
+    public void evaluateRealTime() {
+        swing.doLater {
+            if (chkRunEveryChange.selected){
+                if (editorInput.text != lastInputText || editorGroovy.text != lastGroovyText) {
+                    evaluate();
+                }
+            }
+        }
+    }
+
     public void evaluate() {
         swing.doLater {
-            if (editorInput.text != lastInputText || editorGroovy.text != lastGroovyText) {
-                try {
-                    lastInputText = editorInput.text
-                    lastGroovyText = editorGroovy.text
+            try {
+                lastInputText = editorInput.text
+                lastGroovyText = editorGroovy.text
 
-                    editorOutput.text = processer.process(editorInput.text, editorInput, editorGroovy.text)
+                editorOutput.text = processer.process(editorInput.text, editorInput, editorGroovy.text)
 
-                    editorOutput.foreground = java.awt.Color.BLACK
-                } catch (Exception ex) {
-                    editorOutput.text = ex
-                    editorOutput.foreground = java.awt.Color.RED
-                }
+                editorOutput.foreground = java.awt.Color.BLACK
+            } catch (Exception ex) {
+                editorOutput.text = ex
+                editorOutput.foreground = java.awt.Color.RED
             }
         }
     }

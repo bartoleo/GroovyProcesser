@@ -1,6 +1,6 @@
 package org.bartoleo.groovyprocesser
 
-@Grab(group='org.apache.commons', module='commons-lang3', version='3.1')
+//@Grab(group='org.apache.commons', module='commons-lang3', version='3.1')
 
 import groovy.json.JsonSlurper
 import org.apache.commons.lang3.text.WordUtils

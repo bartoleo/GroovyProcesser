@@ -11,6 +11,12 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
 
+
+group = "org.bartoleo"
+version = "0.1.0"
+
+mainClassName = "org.bartoleo.groovyprocesser.GroovyProcesser"
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use 'jcenter' for resolving your dependencies.
