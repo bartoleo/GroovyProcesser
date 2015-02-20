@@ -4,29 +4,58 @@ package org.bartoleo.groovyprocesser
 
 import groovy.json.JsonSlurper
 import org.apache.commons.lang3.text.WordUtils
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ImportCustomizer
+import org.codehaus.groovy.tools.LoaderConfiguration
+import org.codehaus.groovy.tools.RootLoader
 
 import java.beans.Introspector
 
 class Processer {
 
-    final Binding binding = new Binding()
+    final Binding binding
     final GroovyShell shell
     def script
     String lastGroovyScript =""
 
     Processer(String pPathBase) {
-        GroovyClassLoader groovyClassLoader = new GroovyClassLoader()
+//       if (pPathBase){
+//            File fileLib = new File(pPathBase+File.separator+"lib")
+//            def p = ~/.*\.jar/
+//            fileLib.eachFileMatch(p) {
+//                println it.toURI().toURL()
+//                groovyClassLoader.addURL(it.toURI().toURL())
+//            }
+////            groovyClassLoader.addClasspath(pPathBase+File.separator+"lib")
+////            println pPathBase+File.separator+"lib"
+//        }
+        // add POJO base class, and classpath
+        CompilerConfiguration cc = new CompilerConfiguration();
+//        cc.setScriptBaseClass( this.class.getName() );
+        //cc.setClasspathList(classpath);
+//        if (pPathBase){
+//            cc.setClasspathList([pPathBase+File.separator+"lib"+File.separator+"sqljdbc4.jar"])
+//            println cc.classpath
+//        }
+
+// inject default imports
+        ImportCustomizer ic = new ImportCustomizer();
+//        ic.addImports( ServiceUtils.class.getName() );
+        cc.addCompilationCustomizers(ic);
+
+        LoaderConfiguration loaderConfiguration = new LoaderConfiguration()
         if (pPathBase){
-            File fileLib = new File(pPathBase+File.separator+"lib")
-            def p = ~/.*\.jar/
-            fileLib.eachFileMatch(p) {
-                println it.toURI().toURL()
-                groovyClassLoader.addURL(it.toURI().toURL())
-            }
-//            groovyClassLoader.addClasspath(pPathBase+File.separator+"lib")
-//            println pPathBase+File.separator+"lib"
+            loaderConfiguration.addClassPath(pPathBase+File.separator+"lib"+File.separator+"*")
+            cc.classpath = pPathBase+File.separator+"lib"+File.separator+"*"
         }
-        this.shell = new GroovyShell(groovyClassLoader,binding)
+        RootLoader rootLoader = new RootLoader(loaderConfiguration)
+
+
+// inject context and properties
+        binding = new Binding();
+
+// parse the recipe text file
+        this.shell = new GroovyShell(rootLoader, binding, cc)
     }
 
     public def evaluateInput(String pText) {
