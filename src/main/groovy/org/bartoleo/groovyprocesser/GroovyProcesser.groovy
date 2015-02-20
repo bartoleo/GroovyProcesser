@@ -20,7 +20,8 @@ class GroovyProcesser {
     Font font = new Font("Courier", Font.PLAIN, 13)
     String lastInputText = ""
     String lastGroovyText = ""
-    Processer processer = new Processer()
+    String baseDir = System.getProperty("user.home")+File.separator+"GroovyProcesser"
+    Processer processer = new Processer(baseDir)
 
     public static void main(String[] args) {
         new GroovyProcesser().gui();
@@ -157,7 +158,12 @@ class GroovyProcesser {
                                     button( text:"save", actionPerformed:{
                                         saveGroovyAction()
                                     })
-                                    comboBox( id:'cmbFile',  actionPerformed: {println 'cmbFileChanged'})
+                                    separator()
+                                    label 'Choose a file:'
+                                    comboBox( id:'cmbFile',  actionPerformed: {
+                                        selectedFile()
+                                    })
+                                    separator()
                                     checkBox(id: 'chkRunEveryChange', text:'Run Every Change', selected:true)
                                 }
                                 scrollPane(id: "scrollPaneEditor") {
@@ -201,11 +207,29 @@ class GroovyProcesser {
 
         swing.doLater {
             //frame.size = [1024,800]
-            cmbFile.addItem("")
-            cmbFile.addItem("test")
+            loadCmbFile()
+            editorGroovy.requestFocus()
         }
 
+    }
 
+    private void selectedFile() {
+        String selectedFile = swing.cmbFile.getSelectedItem()
+        if (selectedFile){
+            swing.editorGroovy  .text = new File(baseDir+File.separator+selectedFile).text
+            evaluateRealTime()
+        }
+    }
+
+    private void loadCmbFile() {
+        DefaultComboBoxModel model = (DefaultComboBoxModel) swing.cmbFile.getModel();
+        model.removeAllElements();
+        swing.cmbFile.addItem("")
+        File fileDir = new File(baseDir)
+        def p = ~/.*\.groovy/
+        fileDir.eachFileMatch(p) {
+            swing.cmbFile.addItem(it.name)
+        }
     }
 
     public void loadInputAction(){
@@ -253,6 +277,7 @@ class GroovyProcesser {
     public void loadGroovyAction(){
         def openFileDialog = new JFileChooser(
                 dialogTitle: "Choose an input groovy file",
+                currentDirectory: new File(baseDir),
                 fileSelectionMode: JFileChooser.FILES_ONLY,
                 fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
 
@@ -267,6 +292,7 @@ class GroovyProcesser {
     public void saveGroovyAction(){
         def saveFileDialog = new JFileChooser(
                 dialogTitle: "Choose file to save",
+                currentDirectory: new File(baseDir),
                 fileSelectionMode: JFileChooser.FILES_ONLY,
                 //the file filter must show also directories, in order to be able to look into them
                 fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
@@ -276,6 +302,7 @@ class GroovyProcesser {
             File fileToSave = saveFileDialog.getSelectedFile();
             fileToSave.write(swing.editorGroovy.text)
         }
+        loadCmbFile()
     }
 
     public void copyAction(){

@@ -10,7 +10,24 @@ import java.beans.Introspector
 class Processer {
 
     final Binding binding = new Binding()
-    final GroovyShell shell = new GroovyShell(binding)
+    final GroovyShell shell
+    def script
+    String lastGroovyScript =""
+
+    Processer(String pPathBase) {
+        GroovyClassLoader groovyClassLoader = new GroovyClassLoader()
+        if (pPathBase){
+            File fileLib = new File(pPathBase+File.separator+"lib")
+            def p = ~/.*\.jar/
+            fileLib.eachFileMatch(p) {
+                println it.toURI().toURL()
+                groovyClassLoader.addURL(it.toURI().toURL())
+            }
+//            groovyClassLoader.addClasspath(pPathBase+File.separator+"lib")
+//            println pPathBase+File.separator+"lib"
+        }
+        this.shell = new GroovyShell(groovyClassLoader,binding)
+    }
 
     public def evaluateInput(String pText) {
         def result
@@ -88,7 +105,10 @@ class Processer {
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
             binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pInputEditor.text = valore; })
-            def script = shell.parse(pGroovyScript)
+            if (pGroovyScript!=lastGroovyScript){
+                script = shell.parse(pGroovyScript)
+                lastGroovyScript = pGroovyScript
+            }
             def returned = script.run()
 
             if (returned) {
