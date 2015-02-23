@@ -19,6 +19,16 @@ class Processer {
     String lastGroovyScript =""
 
     Processer(String pPathBase) {
+
+        URLClassLoader loader = GroovyObject.class.classLoader
+        if (pPathBase){
+            File fileLib = new File(pPathBase+File.separator+"lib")
+            def p = ~/.*\.jar/
+            fileLib.eachFileMatch(p) {
+                loader.addURL(it.toURI().toURL())
+            }
+        }
+
 //       if (pPathBase){
 //            File fileLib = new File(pPathBase+File.separator+"lib")
 //            def p = ~/.*\.jar/
@@ -49,6 +59,7 @@ class Processer {
             cc.classpath = pPathBase+File.separator+"lib"+File.separator+"*"
         }
         RootLoader rootLoader = new RootLoader(loaderConfiguration)
+
 
 
 // inject context and properties

@@ -334,6 +334,7 @@ class GroovyProcesser {
             } catch (Exception ex) {
                 editorOutput.text = ex
                 editorOutput.foreground = java.awt.Color.RED
+                ex.printStackTrace()
             }
         }
     }
