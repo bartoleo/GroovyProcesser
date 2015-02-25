@@ -134,7 +134,7 @@ class Processer {
     def process(String pInput, def pGroovyScript, GroovyProcesserGui pGroovyProcesserGui) {
         String result
 
-        System.out.println("inizio")
+//        System.out.println("inizio")
 
         //redirect output to stream, so I'll read output written with print
         def saveOut = System.out
@@ -168,7 +168,8 @@ class Processer {
         } finally {
             System.out = saveOut
         }
-        System.out.println("fine")
+
+//        System.out.println("fine")
 
         return result
 
