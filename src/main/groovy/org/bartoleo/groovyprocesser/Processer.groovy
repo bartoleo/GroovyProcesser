@@ -131,8 +131,10 @@ class Processer {
         return pText
     }
 
-    def process(String pInput, final def pInputEditor, def pGroovyScript) {
+    def process(String pInput, def pGroovyScript, GroovyProcesserGui pGroovyProcesserGui) {
         String result
+
+        System.out.println("inizio")
 
         //redirect output to stream, so I'll read output written with print
         def saveOut = System.out
@@ -140,11 +142,12 @@ class Processer {
         def newOut = new PrintStream(buf)
         System.out = newOut
 
+
         try {
 
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
-            binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pInputEditor.text = valore; })
+            binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pGroovyProcesserGui.setInput(valore); })
             if (pGroovyScript!=lastGroovyScript){
                 script = shell.parse(pGroovyScript)
                 lastGroovyScript = pGroovyScript
@@ -159,13 +162,18 @@ class Processer {
 
             result +=  buf.toString()
 
+            pGroovyProcesserGui.setOutput(result)
+        } catch (Throwable ex){
+            pGroovyProcesserGui.setOutputOnException(ex)
         } finally {
             System.out = saveOut
         }
+        System.out.println("fine")
 
         return result
 
     }
+
 
     public String toPropertyName(String pLine){
         String propertyName

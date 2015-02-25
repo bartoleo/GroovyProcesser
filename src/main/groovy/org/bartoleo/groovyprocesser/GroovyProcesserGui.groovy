@@ -4,34 +4,38 @@ import groovy.swing.SwingBuilder
 import groovy.ui.text.TextUndoManager
 
 import javax.swing.*
-import java.awt.*
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.Transferable
-import java.awt.datatransfer.StringSelection
-import java.awt.datatransfer.DataFlavor
 import javax.swing.filechooser.FileFilter
-import javax.swing.JFileChooser
-import java.awt.datatransfer.UnsupportedFlavorException
+import java.awt.*
+import java.awt.datatransfer.*
+import java.awt.event.KeyEvent
+import java.util.concurrent.Callable
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
-class GroovyProcesser {
+class GroovyProcesserGui {
     def swing;
-    Font font = new Font("Courier", Font.PLAIN, 13)
-    String lastInputText = ""
-    String lastGroovyText = ""
-    String baseDir = System.getProperty("user.home")+File.separator+"GroovyProcesser"
-    Processer processer = new Processer(baseDir)
+    Font font
+    String lastInputText
+    String lastGroovyText
+    String baseDir
+    Processer processer
+    final ThreadPoolExecutor executor
 
-    public static void main(String[] args) {
-        new GroovyProcesser().gui();
+    public GroovyProcesserGui() {
+        font = new Font("Courier", Font.PLAIN, 13)
+        swing = new SwingBuilder()
+        lastInputText = ""
+        lastGroovyText = ""
+        baseDir = System.getProperty("user.home")+File.separator+"GroovyProcesser"
+        processer = new Processer(baseDir)
+        executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+
     }
 
-    public GroovyProcesser() {
-
-    }
-
-    public void gui() {
+    public void showGui() {
 
         System.setProperty("apple.laf.useScreenMenuBar", "true")
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "GroovyProcesser")
@@ -41,17 +45,17 @@ class GroovyProcesser {
 
         def editorGroovyUndoManager = new TextUndoManager()
         def editorInputUndoManager = new TextUndoManager()
+        def menuModifier = KeyEvent.getKeyModifiersText(
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()).toLowerCase() + ' '
 
-        swing = new SwingBuilder()
         swing.edt {
             //lookAndFeel 'nimbus'
             frame(title: "Groovy Processer", pack: true, show: true,
                     defaultCloseOperation: EXIT_ON_CLOSE, id: "frame",
                     extendedState: JFrame.MAXIMIZED_BOTH,
-                    preferredSize: [width, height],
-            ) {
+                    preferredSize: [width, height]) {
 
-                actionUndo = swing.action(name: 'Undo', accelerator: 'ctrl Z') {
+                actionUndo = swing.action(name: 'Undo', accelerator: menuModifier+'Z') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy ){
@@ -67,7 +71,7 @@ class GroovyProcesser {
 
                 }
 
-                actionRedo = swing.action(name: 'Redo', accelerator: 'ctrl Y') {
+                actionRedo = swing.action(name: 'Redo', accelerator: menuModifier+'Y') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy ){
@@ -82,7 +86,7 @@ class GroovyProcesser {
                     }
                 }
 
-                actionRun = swing.action(name: 'run') {
+                actionRun = swing.action(name: 'Run',accelerator:shortcut('ENTER')) {
                     evaluate()
                 }
 
@@ -141,7 +145,7 @@ class GroovyProcesser {
                             scrollPane() {
                                 editorPane(id: "editorInput", editable: true, font: font,
                                         keyReleased: { evt ->
-                                            if (evt.isControlDown()&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
+                                            if ((evt.isControlDown())&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
                                                 evaluate()
                                             } else {
                                                 evaluateRealTime()
@@ -159,18 +163,15 @@ class GroovyProcesser {
                                         saveGroovyAction()
                                     })
                                     separator()
+                                    checkBox(id: 'chkRunEveryChange', text:'Run Every Change', selected:true)
+                                    separator()
                                     label 'Choose a file:'
                                     comboBox( id:'cmbFile',  actionPerformed: {
                                         selectedFile()
                                     })
-                                    separator()
-                                    checkBox(id: 'chkRunEveryChange', text:'Run Every Change', selected:true)
                                 }
-                                scrollPane(id: "scrollPaneEditor") {
+                                scrollPane(id: "scrollPaneEditor" ) {
                                 editorPane(id: "editorGroovy", editable: true, font: font,
-                                        text: '''input.eachLine{
-  println "prefisso${it}suffisso"
-}''',
                                         keyReleased: { evt ->
                                             if (evt.isControlDown()&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
                                                 evaluate()
@@ -209,6 +210,10 @@ class GroovyProcesser {
             //frame.size = [1024,800]
             loadCmbFile()
             editorGroovy.requestFocus()
+            editorGroovy.text = '''\
+input.eachLine{
+  println "prefisso${it}suffisso"
+}'''
         }
 
     }
@@ -323,20 +328,44 @@ class GroovyProcesser {
     }
 
     public void evaluate() {
-        swing.doLater {
-            try {
-                lastInputText = editorInput.text
-                lastGroovyText = editorGroovy.text
+        lastInputText = swing.editorInput.text
+        lastGroovyText = swing.editorGroovy.text
+        //evaluate on other thread but sequentially and one at a time
+//        println "queue:"+executor.getQueue().size()
+        executor.submit(
+                {
+                    //there are next tasks
+                    if (executor.getQueue().size()>1){
+                        //autokill
+                        return
+                    }
+                    processer.process(swing.editorInput.text, swing.editorGroovy.text, this)
+                }  as Callable
+        )
+    }
 
-                editorOutput.text = processer.process(editorInput.text, editorInput, editorGroovy.text)
 
-                editorOutput.foreground = java.awt.Color.BLACK
-            } catch (Throwable ex) {
-                //catch throwable to catch even assert errors
-                editorOutput.text = ex
-                editorOutput.foreground = java.awt.Color.RED
-                ex.printStackTrace()
-            }
+    public void setInput(String pInputText){
+        swing.doLater{
+            editorInput.text = pInputText
+        }
+    }
+
+    public void setOutput(String pText) {
+        swing.doLater{
+            editorOutput.foreground = java.awt.Color.BLACK
+            editorOutput.text = pText
+        }
+    }
+
+    public void setOutputOnException(Throwable ex) {
+        swing.doLater{
+            editorOutput.foreground = java.awt.Color.RED
+            StringWriter stackTraceWriter = new StringWriter()
+            ex.printStackTrace(new PrintWriter(stackTraceWriter))
+            editorOutput.text = ex.message + "\n\n" + stackTraceWriter.toString()
+            editorOutput.setCaretPosition(0)
+            editorOutput.moveCaretPosition(0)
         }
     }
 
