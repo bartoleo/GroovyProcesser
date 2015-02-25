@@ -331,7 +331,8 @@ class GroovyProcesser {
                 editorOutput.text = processer.process(editorInput.text, editorInput, editorGroovy.text)
 
                 editorOutput.foreground = java.awt.Color.BLACK
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
+                //catch throwable to catch even assert errors
                 editorOutput.text = ex
                 editorOutput.foreground = java.awt.Color.RED
                 ex.printStackTrace()
