@@ -16,13 +16,13 @@ class Processer {
     final Binding binding
     final GroovyShell shell
     def script
-    String lastGroovyScript =""
+    String lastGroovyScript = ""
 
     Processer(String pPathBase) {
 
         URLClassLoader loader = GroovyObject.class.classLoader
-        if (pPathBase){
-            File fileLib = new File(pPathBase+File.separator+"lib")
+        if (pPathBase) {
+            File fileLib = new File(pPathBase + File.separator + "lib")
             def p = ~/.*\.jar/
             fileLib.eachFileMatch(p) {
                 loader.addURL(it.toURI().toURL())
@@ -54,13 +54,11 @@ class Processer {
         cc.addCompilationCustomizers(ic);
 
         LoaderConfiguration loaderConfiguration = new LoaderConfiguration()
-        if (pPathBase){
-            loaderConfiguration.addClassPath(pPathBase+File.separator+"lib"+File.separator+"*")
-            cc.classpath = pPathBase+File.separator+"lib"+File.separator+"*"
+        if (pPathBase) {
+            loaderConfiguration.addClassPath(pPathBase + File.separator + "lib" + File.separator + "*")
+            cc.classpath = pPathBase + File.separator + "lib" + File.separator + "*"
         }
         RootLoader rootLoader = new RootLoader(loaderConfiguration)
-
-
 
 // inject context and properties
         binding = new Binding();
@@ -75,10 +73,10 @@ class Processer {
             return ""
         }
         result = pText
-        if (pText.startsWith("/***")) {
+        if (pText.startsWith("@gp:")) {
             String firstLine = getFirstLine(pText)
-            if (firstLine.endsWith("***/")) {
-                String stringActions = firstLine.substring(4, firstLine.length() - 4);
+            if (firstLine.length() > 4) {
+                String stringActions = firstLine.substring(4, firstLine.length());
                 def actions = stringActions.split(",")
                 result = stripFirstLine(pText)
                 actions.each { action ->
@@ -148,7 +146,7 @@ class Processer {
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
             binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pGroovyProcesserGui.setInput(valore); })
-            if (pGroovyScript!=lastGroovyScript){
+            if (pGroovyScript != lastGroovyScript) {
                 script = shell.parse(pGroovyScript)
                 lastGroovyScript = pGroovyScript
             }
@@ -160,10 +158,10 @@ class Processer {
                 result = ""
             }
 
-            result +=  buf.toString()
+            result += buf.toString()
 
             pGroovyProcesserGui.setOutput(result)
-        } catch (Throwable ex){
+        } catch (Throwable ex) {
             pGroovyProcesserGui.setOutputOnException(ex)
         } finally {
             System.out = saveOut
@@ -176,43 +174,43 @@ class Processer {
     }
 
 
-    public String toPropertyName(String pLine){
+    public String toPropertyName(String pLine) {
         String propertyName
 
-        if (!pLine){
+        if (!pLine) {
             return ""
         }
 
         propertyName = WordUtils.capitalize(pLine)
-        propertyName = propertyName.replace(" ","")
+        propertyName = propertyName.replace(" ", "")
 
         return Introspector.decapitalize(propertyName)
 
     }
 
-    public String toGetter(String pLine){
+    public String toGetter(String pLine) {
         String propertyName
 
-        if (!pLine){
+        if (!pLine) {
             return ""
         }
 
         propertyName = toPropertyName(pLine)
 
-        return "get"+WordUtils.capitalize(propertyName)+"("+")"
+        return "get" + WordUtils.capitalize(propertyName) + "(" + ")"
 
     }
 
-    public String toSetter(String pLine, String pValue){
+    public String toSetter(String pLine, String pValue) {
         String propertyName
 
-        if (!pLine){
+        if (!pLine) {
             return ""
         }
 
         propertyName = toPropertyName(pLine)
 
-        return "set"+WordUtils.capitalize(propertyName)+"("+pValue+")"
+        return "set" + WordUtils.capitalize(propertyName) + "(" + pValue + ")"
 
     }
 

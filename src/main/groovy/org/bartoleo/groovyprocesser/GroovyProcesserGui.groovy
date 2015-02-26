@@ -12,6 +12,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
@@ -23,16 +24,17 @@ class GroovyProcesserGui {
     String baseDir
     Processer processer
     final ThreadPoolExecutor executor
+    AtomicInteger executionProgr
 
     public GroovyProcesserGui() {
         font = new Font("Courier", Font.PLAIN, 13)
         swing = new SwingBuilder()
         lastInputText = ""
         lastGroovyText = ""
-        baseDir = System.getProperty("user.home")+File.separator+"GroovyProcesser"
+        baseDir = System.getProperty("user.home") + File.separator + "GroovyProcesser"
         processer = new Processer(baseDir)
-        executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
-
+        executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>())
+        executionProgr = new AtomicInteger(0)
     }
 
     public void showGui() {
@@ -55,38 +57,38 @@ class GroovyProcesserGui {
                     extendedState: JFrame.MAXIMIZED_BOTH,
                     preferredSize: [width, height]) {
 
-                actionUndo = swing.action(name: 'Undo', accelerator: menuModifier+'Z') {
+                actionUndo = swing.action(name: 'Undo', accelerator: menuModifier + 'Z') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
-                    if (component == swing.editorGroovy ){
+                    if (component == swing.editorGroovy) {
                         undoManager = editorGroovyUndoManager
                     }
-                    if (component == swing.editorInput ){
+                    if (component == swing.editorInput) {
                         undoManager = editorInputUndoManager
                     }
-                    if (undoManager &&  undoManager.canUndo()){
+                    if (undoManager && undoManager.canUndo()) {
                         undoManager.undo()
                         evaluateRealTime()
                     }
 
                 }
 
-                actionRedo = swing.action(name: 'Redo', accelerator: menuModifier+'Y') {
+                actionRedo = swing.action(name: 'Redo', accelerator: menuModifier + 'Y') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
-                    if (component == swing.editorGroovy ){
+                    if (component == swing.editorGroovy) {
                         undoManager = editorGroovyUndoManager
                     }
-                    if (component == swing.editorInput ){
+                    if (component == swing.editorInput) {
                         undoManager = editorInputUndoManager
                     }
-                    if (undoManager &&  undoManager.canRedo()){
+                    if (undoManager && undoManager.canRedo()) {
                         undoManager.redo()
                         evaluateRealTime()
                     }
                 }
 
-                actionRun = swing.action(name: 'Run',accelerator:shortcut('ENTER')) {
+                actionRun = swing.action(name: 'Run', accelerator: shortcut('ENTER')) {
                     evaluate()
                 }
 
@@ -101,9 +103,9 @@ class GroovyProcesserGui {
 //                        menuItem(action: actionExit)
                     }
                     menu('Edit', mnemonic: 'E') {
-                        menuItem(action: actionUndo, mnemonic: 'Z' )
-                        menuItem(action: actionRedo, mnemonic: 'Y' )
-                        menuItem(action: actionRun )
+                        menuItem(action: actionUndo, mnemonic: 'Z')
+                        menuItem(action: actionRedo, mnemonic: 'Y')
+                        menuItem(action: actionRun)
 //                        separator()
 //                        menuItem(action: actionCut)
 //                        menuItem(action: actionCopy)
@@ -130,22 +132,22 @@ class GroovyProcesserGui {
                     }
                 }
 
-                splitPane(id: 'vsplit1', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height/3*2) as int) {
+                splitPane(id: 'vsplit1', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height / 3 * 2) as int) {
                     panel {
                         borderLayout(vgap: 5)
-                        toolBar(rollover: true, constraints: BorderLayout.NORTH){
-                            button( text:"load", actionPerformed:{
+                        toolBar(rollover: true, constraints: BorderLayout.NORTH) {
+                            button(text: "load", actionPerformed: {
                                 loadInputAction()
                             })
-                            button( text:"paste", actionPerformed:{
+                            button(text: "paste", actionPerformed: {
                                 pasteInputAction()
                             })
                         }
-                        splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height/3) as int, constraints: BorderLayout.CENTER) {
+                        splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height / 3) as int, constraints: BorderLayout.CENTER) {
                             scrollPane() {
                                 editorPane(id: "editorInput", editable: true, font: font,
                                         keyReleased: { evt ->
-                                            if ((evt.isControlDown())&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
+                                            if ((evt.isControlDown()) && (evt.getKeyCode() == 10 || evt.getKeyCode() == 13)) {
                                                 evaluate()
                                             } else {
                                                 evaluateRealTime()
@@ -155,30 +157,30 @@ class GroovyProcesserGui {
                             }
                             panel {
                                 borderLayout(vgap: 5)
-                                toolBar(rollover: true, constraints: BorderLayout.NORTH){
-                                    button( text:"load", actionPerformed:{
+                                toolBar(rollover: true, constraints: BorderLayout.NORTH) {
+                                    button(text: "load", actionPerformed: {
                                         loadGroovyAction()
                                     })
-                                    button( text:"save", actionPerformed:{
+                                    button(text: "save", actionPerformed: {
                                         saveGroovyAction()
                                     })
                                     separator()
-                                    checkBox(id: 'chkRunEveryChange', text:'Run Every Change', selected:true)
+                                    checkBox(id: 'chkRunEveryChange', text: 'Run Every Change', selected: true)
                                     separator()
                                     label 'Choose a file:'
-                                    comboBox( id:'cmbFile',  actionPerformed: {
+                                    comboBox(id: 'cmbFile', actionPerformed: {
                                         selectedFile()
                                     })
                                 }
-                                scrollPane(id: "scrollPaneEditor" ) {
-                                editorPane(id: "editorGroovy", editable: true, font: font,
-                                        keyReleased: { evt ->
-                                            if (evt.isControlDown()&&(evt.getKeyCode()==10||evt.getKeyCode()==13)){
-                                                evaluate()
-                                            } else {
-                                                evaluateRealTime()
+                                scrollPane(id: "scrollPaneEditor") {
+                                    editorPane(id: "editorGroovy", editable: true, font: font,
+                                            keyReleased: { evt ->
+                                                if (evt.isControlDown() && (evt.getKeyCode() == 10 || evt.getKeyCode() == 13)) {
+                                                    evaluate()
+                                                } else {
+                                                    evaluateRealTime()
+                                                }
                                             }
-                                        }
                                     )
                                 }
                             }
@@ -187,13 +189,13 @@ class GroovyProcesserGui {
                     }
                     panel {
                         borderLayout(vgap: 5)
-                        toolBar(rollover: true, constraints: BorderLayout.NORTH){
-                            button( text:"copy", actionPerformed:{
+                        toolBar(rollover: true, constraints: BorderLayout.NORTH) {
+                            button(text: "copy", actionPerformed: {
                                 copyAction()
                             })
                         }
                         scrollPane() {
-                        editorPane(id: "editorOutput", editable: false, font: font, background: new java.awt.Color (255, 255, 220))
+                            editorPane(id: "editorOutput", editable: false, font: font, background: new java.awt.Color(255, 255, 220))
                         }
                     }
                 }
@@ -220,8 +222,8 @@ input.eachLine{
 
     private void selectedFile() {
         String selectedFile = swing.cmbFile.getSelectedItem()
-        if (selectedFile){
-            swing.editorGroovy  .text = new File(baseDir+File.separator+selectedFile).text
+        if (selectedFile) {
+            swing.editorGroovy.text = new File(baseDir + File.separator + selectedFile).text
             evaluateRealTime()
         }
     }
@@ -237,7 +239,7 @@ input.eachLine{
         }
     }
 
-    public void loadInputAction(){
+    public void loadInputAction() {
         def openFileDialog = new JFileChooser(
                 dialogTitle: "Choose an input file",
                 fileSelectionMode: JFileChooser.FILES_ONLY)
@@ -261,9 +263,9 @@ input.eachLine{
         ;
         if (hasTransferableText) {
             try {
-                result = (String)contents.getTransferData(DataFlavor.stringFlavor);
+                result = (String) contents.getTransferData(DataFlavor.stringFlavor);
             }
-            catch (UnsupportedFlavorException | IOException ex){
+            catch (UnsupportedFlavorException | IOException ex) {
                 System.out.println(ex);
                 ex.printStackTrace();
             }
@@ -271,7 +273,7 @@ input.eachLine{
         return result;
     }
 
-    public void pasteInputAction(){
+    public void pasteInputAction() {
         swing.doLater {
             editorInput.text = getClipboardContents();
             evaluateRealTime()
@@ -279,12 +281,12 @@ input.eachLine{
     }
 
 
-    public void loadGroovyAction(){
+    public void loadGroovyAction() {
         def openFileDialog = new JFileChooser(
                 dialogTitle: "Choose an input groovy file",
                 currentDirectory: new File(baseDir),
                 fileSelectionMode: JFileChooser.FILES_ONLY,
-                fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+                fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
 
         int userSelection = openFileDialog.showOpenDialog()
         if (userSelection == JFileChooser.APPROVE_OPTION) {
@@ -294,13 +296,13 @@ input.eachLine{
         }
     }
 
-    public void saveGroovyAction(){
+    public void saveGroovyAction() {
         def saveFileDialog = new JFileChooser(
                 dialogTitle: "Choose file to save",
                 currentDirectory: new File(baseDir),
                 fileSelectionMode: JFileChooser.FILES_ONLY,
                 //the file filter must show also directories, in order to be able to look into them
-                fileFilter: [getDescription: {-> "*.groovy"}, accept:{file-> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+                fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
 
         int userSelection = saveFileDialog.showSaveDialog()
         if (userSelection == JFileChooser.APPROVE_OPTION) {
@@ -310,7 +312,7 @@ input.eachLine{
         loadCmbFile()
     }
 
-    public void copyAction(){
+    public void copyAction() {
         swing.doLater {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(new StringSelection(editorOutput.text), null)
@@ -319,7 +321,7 @@ input.eachLine{
 
     public void evaluateRealTime() {
         swing.doLater {
-            if (chkRunEveryChange.selected){
+            if (chkRunEveryChange.selected) {
                 if (editorInput.text != lastInputText || editorGroovy.text != lastGroovyText) {
                     evaluate();
                 }
@@ -332,34 +334,47 @@ input.eachLine{
         lastGroovyText = swing.editorGroovy.text
         //evaluate on other thread but sequentially and one at a time
 //        println "queue:"+executor.getQueue().size()
+        int lastProgr = executionProgr.incrementAndGet()
         executor.submit(
                 {
-                    //there are next tasks
-                    if (executor.getQueue().size()>1){
+//                    //there are next tasks
+//                    if (executor.getQueue().size() > 1) {
+//                        //autokill
+//                        return
+//                    }
+                    //if i'm not the last... stop
+                    if (executionProgr.intValue()!=lastProgr){
+                        //autokill
+                        return
+                    }
+                    // time for another keyboard click
+                    sleep(50);
+                    //if i'm not the last... stop
+                    if (executionProgr.intValue()!=lastProgr){
                         //autokill
                         return
                     }
                     processer.process(swing.editorInput.text, swing.editorGroovy.text, this)
-                }  as Callable
+                } as Callable
         )
     }
 
 
-    public void setInput(String pInputText){
-        swing.doLater{
+    public void setInput(String pInputText) {
+        swing.doLater {
             editorInput.text = pInputText
         }
     }
 
     public void setOutput(String pText) {
-        swing.doLater{
+        swing.doLater {
             editorOutput.foreground = java.awt.Color.BLACK
             editorOutput.text = pText
         }
     }
 
     public void setOutputOnException(Throwable ex) {
-        swing.doLater{
+        swing.doLater {
             editorOutput.foreground = java.awt.Color.RED
             StringWriter stackTraceWriter = new StringWriter()
             ex.printStackTrace(new PrintWriter(stackTraceWriter))
