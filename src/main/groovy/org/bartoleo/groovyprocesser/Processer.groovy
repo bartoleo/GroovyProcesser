@@ -17,6 +17,7 @@ class Processer {
     final GroovyShell shell
     def script
     String lastGroovyScript = ""
+    Map<String, Object> cache = [:]
 
     Processer(String pPathBase) {
 
@@ -92,8 +93,7 @@ class Processer {
                         result = slurper.parseText(result)
                     }
                     if (action == "url") {
-                        //TODO: cache!!!!!!!
-                        result = result.toURL().getText();
+                        result = getUrlTextWithCache(result);
                     }
                     if (action == "file") {
                         result = new File(result).getText();
@@ -113,6 +113,21 @@ class Processer {
         return result
     }
 
+    String getUrlTextWithCache(String pUrl) {
+        //simple caching system as a concept
+        //TODO: use something better
+        if (!cache.containsKey(pUrl)) {
+            File fileTmpCache = File.createTempFile("GP_URL",".cache")
+            fileTmpCache.deleteOnExit()
+            //FIXME: better timeout???
+            fileTmpCache << pUrl.toURL().getText([connectTimeout:500, readTimeout:30000])
+            cache[pUrl] = fileTmpCache
+        } else {
+            println "cache hit"
+        }
+        return cache[pUrl].text
+    }
+
     public String getFirstLine(pText) {
         int index = pText.indexOf("\n")
         if (index >= 0) {
@@ -129,7 +144,7 @@ class Processer {
         return pText
     }
 
-    def process(String pInput, def pGroovyScript, GroovyProcesserGui pGroovyProcesserGui) {
+    def process(String pInput, def pGroovyScript, ProcesserOutputInterface pProcesserOutput) {
         String result
 
 //        System.out.println("inizio")
@@ -145,7 +160,7 @@ class Processer {
 
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
-            binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pGroovyProcesserGui.setInput(valore); })
+            binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pProcesserOutput.setInput(valore); })
             if (pGroovyScript != lastGroovyScript) {
                 script = shell.parse(pGroovyScript)
                 lastGroovyScript = pGroovyScript
@@ -160,9 +175,11 @@ class Processer {
 
             result += buf.toString()
 
-            pGroovyProcesserGui.setOutput(result)
+            System.out = saveOut
+            pProcesserOutput.setOutput(result)
         } catch (Throwable ex) {
-            pGroovyProcesserGui.setOutputOnException(ex)
+            System.out = saveOut
+            pProcesserOutput.setOutputOnException(ex)
         } finally {
             System.out = saveOut
         }

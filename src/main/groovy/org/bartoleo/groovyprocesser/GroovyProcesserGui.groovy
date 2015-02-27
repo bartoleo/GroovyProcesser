@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
-class GroovyProcesserGui {
+class GroovyProcesserGui implements ProcesserOutputInterface {
     def swing;
     Font font
     String lastInputText
@@ -214,7 +214,7 @@ class GroovyProcesserGui {
             editorGroovy.requestFocus()
             editorGroovy.text = '''\
 input.eachLine{
-  println "prefisso${it}suffisso"
+  println "prefix ${it} suffix"
 }'''
         }
 
@@ -337,24 +337,30 @@ input.eachLine{
         int lastProgr = executionProgr.incrementAndGet()
         executor.submit(
                 {
-//                    //there are next tasks
-//                    if (executor.getQueue().size() > 1) {
-//                        //autokill
-//                        return
-//                    }
-                    //if i'm not the last... stop
-                    if (executionProgr.intValue()!=lastProgr){
-                        //autokill
-                        return
+                    try {
+    //                    //there are next tasks
+    //                    if (executor.getQueue().size() > 1) {
+    //                        //autokill
+    //                        return
+    //                    }
+                        //if i'm not the last... stop
+                        if (executionProgr.intValue()!=lastProgr){
+                            //autokill
+                            return
+                        }
+                        // time for another keyboard click
+                        sleep(50);
+                        //if i'm not the last... stop
+                        if (executionProgr.intValue()!=lastProgr){
+                            //autokill
+                            return
+                        }
+                        println "evaluate "+new Date()
+                        processer.process(swing.editorInput.text, swing.editorGroovy.text, this)
+                    } catch (Throwable ex){
+                        println ex
+                        ex.printStackTrace()
                     }
-                    // time for another keyboard click
-                    sleep(50);
-                    //if i'm not the last... stop
-                    if (executionProgr.intValue()!=lastProgr){
-                        //autokill
-                        return
-                    }
-                    processer.process(swing.editorInput.text, swing.editorGroovy.text, this)
                 } as Callable
         )
     }

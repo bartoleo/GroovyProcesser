@@ -5,12 +5,12 @@ class GroovyProcesser {
     public static void main(String[] args) {
         //no args then gui
         if (!args){
-            new GroovyProcesserGui().showGui();
+            new GroovyProcesserGui().showGui()
             return
         }
 
-        println "usage"
-
+        //args then cli
+        new GroovyProcesserCli(args).run()
 
     }
 

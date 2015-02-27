@@ -34,3 +34,21 @@ dependencies {
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
     testCompile 'junit:junit:4.11'
 }
+
+run {
+        // gradle run -Dmyvariable=myvalue -Dexec.args="arg1 arg2 arg3"
+
+    /* Can pass all the properties: */
+//    systemProperties System.getProperties()
+
+    /* Or just each by name: */
+//    systemProperty "myvariable", System.getProperty("myvariable")
+
+    /* Need to split the space-delimited value in the exec.args */
+    if (System.getProperty("exec.args")){
+        args System.getProperty("exec.args").split()
+    }
+
+    //per utilizzare lo standard input
+    standardInput = System.in
+}
