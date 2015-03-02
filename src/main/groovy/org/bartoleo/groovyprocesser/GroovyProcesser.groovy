@@ -4,7 +4,7 @@ class GroovyProcesser {
 
     public static void main(String[] args) {
         //no args then gui
-        if (!args){
+        if (!args) {
             new GroovyProcesserGui().showGui()
             return
         }

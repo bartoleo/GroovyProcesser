@@ -233,9 +233,11 @@ input.eachLine{
         model.removeAllElements();
         swing.cmbFile.addItem("")
         File fileDir = new File(baseDir)
-        def p = ~/.*\.groovy/
-        fileDir.eachFileMatch(p) {
-            swing.cmbFile.addItem(it.name)
+        if (fileDir.exists()){
+            def p = ~/.*\.groovy/
+            fileDir.eachFileMatch(p) {
+                swing.cmbFile.addItem(it.name)
+            }
         }
     }
 
@@ -338,26 +340,26 @@ input.eachLine{
         executor.submit(
                 {
                     try {
-    //                    //there are next tasks
-    //                    if (executor.getQueue().size() > 1) {
-    //                        //autokill
-    //                        return
-    //                    }
+                        //                    //there are next tasks
+                        //                    if (executor.getQueue().size() > 1) {
+                        //                        //autokill
+                        //                        return
+                        //                    }
                         //if i'm not the last... stop
-                        if (executionProgr.intValue()!=lastProgr){
+                        if (executionProgr.intValue() != lastProgr) {
                             //autokill
                             return
                         }
                         // time for another keyboard click
                         sleep(50);
                         //if i'm not the last... stop
-                        if (executionProgr.intValue()!=lastProgr){
+                        if (executionProgr.intValue() != lastProgr) {
                             //autokill
                             return
                         }
-                        println "evaluate "+new Date()
+//                        println "evaluate "+new Date()
                         processer.process(swing.editorInput.text, swing.editorGroovy.text, this)
-                    } catch (Throwable ex){
+                    } catch (Throwable ex) {
                         println ex
                         ex.printStackTrace()
                     }

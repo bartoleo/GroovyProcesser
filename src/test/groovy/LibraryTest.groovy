@@ -7,13 +7,18 @@
 
 import spock.lang.Specification
 
-class LibraryTest extends Specification{
-    def "someLibraryMethod returns true"() {
+class GroovyProcesserTest extends Specification{
+    def "someTest"() {
         setup:
-        Library lib = new Library()
+        //FIXME: write tests!!!!
+        null
+
         when:
-        def result = lib.someLibraryMethod()
+        //FIXME: write tests!!!!
+        null
+
         then:
-        result == true
+        //FIXME: write tests!!!!
+        true==true
     }
 }

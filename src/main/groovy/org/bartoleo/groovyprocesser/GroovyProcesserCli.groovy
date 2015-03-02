@@ -1,6 +1,6 @@
 package org.bartoleo.groovyprocesser
 
-class GroovyProcesserCli implements ProcesserOutputInterface{
+class GroovyProcesserCli implements ProcesserOutputInterface {
     Processer processer
     String baseDir
     String groovyCode
@@ -11,15 +11,15 @@ class GroovyProcesserCli implements ProcesserOutputInterface{
         processer = new Processer(baseDir)
         groovyCode = new File(args[0]).text
         args.each {
-            if (it=='-i'){
+            if (it == '-i') {
                 interactive = true
             }
         }
     }
 
-    public void run(){
+    public void run() {
 
-        if (!interactive){
+        if (!interactive) {
             evaluate(System.in.text)
         } else {
             def inputstream = new InputStreamReader(System.in)
@@ -27,9 +27,9 @@ class GroovyProcesserCli implements ProcesserOutputInterface{
 
             System.out.println("Type input (empty to quit)!")
             String inputLine
-            while (true){
+            while (true) {
                 inputLine = r.readLine()
-                if (!inputLine){
+                if (!inputLine) {
                     break
                 }
                 evaluate(inputLine)
@@ -41,7 +41,7 @@ class GroovyProcesserCli implements ProcesserOutputInterface{
     public void evaluate(String pInput) {
         try {
             processer.process(pInput, this.groovyCode, this)
-        } catch (Throwable ex){
+        } catch (Throwable ex) {
             println ex
             ex.printStackTrace()
         }

@@ -24,9 +24,11 @@ class Processer {
         URLClassLoader loader = GroovyObject.class.classLoader
         if (pPathBase) {
             File fileLib = new File(pPathBase + File.separator + "lib")
-            def p = ~/.*\.jar/
-            fileLib.eachFileMatch(p) {
-                loader.addURL(it.toURI().toURL())
+            if (fileLib.exists()){
+                def p = ~/.*\.jar/
+                fileLib.eachFileMatch(p) {
+                    loader.addURL(it.toURI().toURL())
+                }
             }
         }
 
@@ -117,10 +119,10 @@ class Processer {
         //simple caching system as a concept
         //TODO: use something better
         if (!cache.containsKey(pUrl)) {
-            File fileTmpCache = File.createTempFile("GP_URL",".cache")
+            File fileTmpCache = File.createTempFile("GP_URL", ".cache")
             fileTmpCache.deleteOnExit()
             //FIXME: better timeout???
-            fileTmpCache << pUrl.toURL().getText([connectTimeout:500, readTimeout:30000])
+            fileTmpCache << pUrl.toURL().getText([connectTimeout: 500, readTimeout: 30000])
             cache[pUrl] = fileTmpCache
         } else {
             println "cache hit"
