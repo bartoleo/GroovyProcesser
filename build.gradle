@@ -29,6 +29,7 @@ dependencies {
     // We use the latest groovy 2.x version for building this library
     compile 'org.codehaus.groovy:groovy-all:2.3.6'
     compile 'org.apache.commons:commons-lang3:3.3.2'
+    compile 'commons-cli:commons-cli:1.2'
 
     // We use the awesome Spock testing and specification framework
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'

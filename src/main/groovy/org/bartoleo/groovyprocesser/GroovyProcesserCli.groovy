@@ -7,13 +7,32 @@ class GroovyProcesserCli implements ProcesserOutputInterface {
     boolean interactive
 
     public GroovyProcesserCli(String[] args) {
+
+        def cli = new CliBuilder(usage:'GroovyProcesser [options] [script.groovy]', header:'Options:')
+        cli.i('interactive mode, processes each line from standard input (enter an empty line to quit)')
+        cli.help('print this message')
+        def options = cli.parse(args)
+
+        if (options.help) {
+            cli.usage()
+            return
+        }
+        if (!options.arguments()) {
+            println "wrong arguments, specify a script groovy"
+            cli.usage()
+            return
+        }
+        def scriptgroovy = new File(options.arguments()[0])
+        if (!scriptgroovy.exists()){
+            println "script file '${options.arguments()[0]}' not found!"
+            return
+        }
+
         baseDir = System.getProperty("user.home") + File.separator + "GroovyProcesser"
         processer = new Processer(baseDir)
-        groovyCode = new File(args[0]).text
-        args.each {
-            if (it == '-i') {
-                interactive = true
-            }
+        groovyCode = scriptgroovy.text
+        if (options.i){
+            interactive = true
         }
     }
 
