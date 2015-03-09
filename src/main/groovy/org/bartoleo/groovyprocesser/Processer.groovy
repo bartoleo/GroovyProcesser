@@ -200,7 +200,9 @@ class Processer {
             return ""
         }
 
-        propertyName = WordUtils.capitalize(pLine)
+        propertyName = pLine.replace("_", " ")
+        propertyName = propertyName.replace("-", " ")
+        propertyName = WordUtils.capitalize(propertyName)
         propertyName = propertyName.replace(" ", "")
 
         return Introspector.decapitalize(propertyName)
@@ -231,6 +233,19 @@ class Processer {
 
         return "set" + WordUtils.capitalize(propertyName) + "(" + pValue + ")"
 
+    }
+
+    public String toCamelCase( String text) {
+        //alias for toPropertyName
+        return toPropertyName(text)
+    }
+
+    public String toSnakeCase( String text ) {
+        text.replaceAll( /([A-Z])/, /_$1/ ).toLowerCase().replaceAll( /^_/, '' )
+    }
+
+    public String toSausageCase( String text ) {
+        text.replaceAll( /([A-Z])/, /-$1/ ).toLowerCase().replaceAll( /^-/, '' )
     }
 
 
