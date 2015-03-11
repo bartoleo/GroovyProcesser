@@ -92,15 +92,64 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     evaluate()
                 }
 
+                actionOpenInput = swing.action(name: 'Load Input', smallIcon: imageIcon(resource:'icons/folder_page.png', class:this)) {
+                    def openFileDialog = new JFileChooser(
+                            dialogTitle: "Choose an input file",
+                            fileSelectionMode: JFileChooser.FILES_ONLY)
+
+                    int userSelection = openFileDialog.showOpenDialog()
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File fileToOpen = openFileDialog.getSelectedFile();
+                        swing.editorInput.text = fileToOpen.text
+                        evaluateRealTime()
+                    }
+                }
+
+                actionOpenGroovy = swing.action(name: 'Load Groovy') {
+                    def openFileDialog = new JFileChooser(
+                            dialogTitle: "Choose an input groovy file",
+                            currentDirectory: new File(baseDir),
+                            fileSelectionMode: JFileChooser.FILES_ONLY,
+                            fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+
+                    int userSelection = openFileDialog.showOpenDialog()
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File fileToOpen = openFileDialog.getSelectedFile();
+                        swing.editorGroovy.text = fileToOpen.text
+                        evaluateRealTime()
+                    }
+                }
+
+                actionSaveAs = swing.action(name: 'Save As') {
+                    def saveFileDialog = new JFileChooser(
+                            dialogTitle: "Choose file to save",
+                            currentDirectory: new File(baseDir),
+                            fileSelectionMode: JFileChooser.FILES_ONLY,
+                            //the file filter must show also directories, in order to be able to look into them
+                            fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
+
+                    int userSelection = saveFileDialog.showSaveDialog()
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File fileToSave = saveFileDialog.getSelectedFile();
+                        fileToSave.write(swing.editorGroovy.text)
+                    }
+                    loadCmbFile()
+                }
+
+                actionExit = swing.action(name: 'Exit') {
+                    System.exit(0)
+                }
+
                 // menu
                 menuBar {
                     menu('File', mnemonic: 'F') {
 //                        menuItem(action: actionNew)
-//                        menuItem(action: actionOpen)
+                        menuItem(action: actionOpenInput)
+                        menuItem(action: actionOpenGroovy)
 //                        menuItem(action: actionSave)
-//                        menuItem(action: actionSaveAs)
-//                        separator()
-//                        menuItem(action: actionExit)
+                        menuItem(action: actionSaveAs)
+                        separator()
+                        menuItem(action: actionExit)
                     }
                     menu('Edit', mnemonic: 'E') {
                         menuItem(action: actionUndo, mnemonic: 'Z')
@@ -136,9 +185,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     panel {
                         borderLayout(vgap: 5)
                         toolBar(rollover: true, constraints: BorderLayout.NORTH) {
-                            button(text: "load", actionPerformed: {
-                                loadInputAction()
-                            })
+                            button(text: "load", action: actionOpenInput)
                             button(text: "paste", actionPerformed: {
                                 pasteInputAction()
                             })
@@ -158,12 +205,8 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                             panel {
                                 borderLayout(vgap: 5)
                                 toolBar(rollover: true, constraints: BorderLayout.NORTH) {
-                                    button(text: "load", actionPerformed: {
-                                        loadGroovyAction()
-                                    })
-                                    button(text: "save", actionPerformed: {
-                                        saveGroovyAction()
-                                    })
+                                    button(text: "load", action: actionOpenGroovy)
+                                    button(text: "save", action: actionSaveAs)
                                     separator()
                                     checkBox(id: 'chkRunEveryChange', text: 'Run Every Change', selected: true)
                                     separator()
@@ -241,19 +284,6 @@ input.eachLine{
         }
     }
 
-    public void loadInputAction() {
-        def openFileDialog = new JFileChooser(
-                dialogTitle: "Choose an input file",
-                fileSelectionMode: JFileChooser.FILES_ONLY)
-
-        int userSelection = openFileDialog.showOpenDialog()
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToOpen = openFileDialog.getSelectedFile();
-            swing.editorInput.text = fileToOpen.text
-            evaluateRealTime()
-        }
-    }
-
     public String getClipboardContents() {
         String result = "";
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -283,36 +313,7 @@ input.eachLine{
     }
 
 
-    public void loadGroovyAction() {
-        def openFileDialog = new JFileChooser(
-                dialogTitle: "Choose an input groovy file",
-                currentDirectory: new File(baseDir),
-                fileSelectionMode: JFileChooser.FILES_ONLY,
-                fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
 
-        int userSelection = openFileDialog.showOpenDialog()
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToOpen = openFileDialog.getSelectedFile();
-            swing.editorGroovy.text = fileToOpen.text
-            evaluateRealTime()
-        }
-    }
-
-    public void saveGroovyAction() {
-        def saveFileDialog = new JFileChooser(
-                dialogTitle: "Choose file to save",
-                currentDirectory: new File(baseDir),
-                fileSelectionMode: JFileChooser.FILES_ONLY,
-                //the file filter must show also directories, in order to be able to look into them
-                fileFilter: [getDescription: {-> "*.groovy" }, accept: { file -> file ==~ /.*?\.groovy/ || file.isDirectory() }] as FileFilter)
-
-        int userSelection = saveFileDialog.showSaveDialog()
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = saveFileDialog.getSelectedFile();
-            fileToSave.write(swing.editorGroovy.text)
-        }
-        loadCmbFile()
-    }
 
     public void copyAction() {
         swing.doLater {
