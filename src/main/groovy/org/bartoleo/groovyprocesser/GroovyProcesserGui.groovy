@@ -57,7 +57,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     extendedState: JFrame.MAXIMIZED_BOTH,
                     preferredSize: [width, height]) {
 
-                actionUndo = swing.action(name: 'Undo', accelerator: menuModifier + 'Z') {
+                actionUndo = swing.action(name: 'Undo',  smallIcon: imageIcon(resource:'icons/arrow_undo.png', class:this), accelerator: menuModifier + 'Z') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy) {
@@ -73,7 +73,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
 
                 }
 
-                actionRedo = swing.action(name: 'Redo', accelerator: menuModifier + 'Y') {
+                actionRedo = swing.action(name: 'Redo',  smallIcon: imageIcon(resource:'icons/arrow_redo.png', class:this), accelerator: menuModifier + 'Y') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy) {
@@ -88,7 +88,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionRun = swing.action(name: 'Run', accelerator: shortcut('ENTER')) {
+                actionRun = swing.action(name: 'Run',  smallIcon: imageIcon(resource:'icons/script_go.png', class:this), accelerator: shortcut('ENTER')) {
                     evaluate()
                 }
 
@@ -105,7 +105,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionOpenGroovy = swing.action(name: 'Load Groovy') {
+                actionOpenGroovy = swing.action(name: 'Load Groovy', smallIcon: imageIcon(resource:'icons/folder_page.png', class:this)) {
                     def openFileDialog = new JFileChooser(
                             dialogTitle: "Choose an input groovy file",
                             currentDirectory: new File(baseDir),
@@ -120,7 +120,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionSaveAs = swing.action(name: 'Save As') {
+                actionSaveAs = swing.action(name: 'Save As', smallIcon: imageIcon(resource:'icons/disk.png', class:this)) {
                     def saveFileDialog = new JFileChooser(
                             dialogTitle: "Choose file to save",
                             currentDirectory: new File(baseDir),
@@ -134,6 +134,16 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                         fileToSave.write(swing.editorGroovy.text)
                     }
                     loadCmbFile()
+                }
+
+                actionCopyOutput = swing.action(name: 'Copy', smallIcon: imageIcon(resource:'icons/page_copy.png', class:this)) {
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(new StringSelection(editorOutput.text), null)
+                }
+
+                actionPasteInput = swing.action(name: 'Paste', smallIcon: imageIcon(resource:'icons/page_paste.png', class:this)) {
+                    editorInput.text = getClipboardContents();
+                    evaluateRealTime()
                 }
 
                 actionExit = swing.action(name: 'Exit') {
@@ -186,9 +196,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                         borderLayout(vgap: 5)
                         toolBar(rollover: true, constraints: BorderLayout.NORTH) {
                             button(text: "load", action: actionOpenInput)
-                            button(text: "paste", actionPerformed: {
-                                pasteInputAction()
-                            })
+                            button(text: "paste", action: actionPasteInput)
                         }
                         splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height / 3) as int, constraints: BorderLayout.CENTER) {
                             scrollPane() {
@@ -233,9 +241,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     panel {
                         borderLayout(vgap: 5)
                         toolBar(rollover: true, constraints: BorderLayout.NORTH) {
-                            button(text: "copy", actionPerformed: {
-                                copyAction()
-                            })
+                            button(text: "copy", action: actionCopyOutput)
                         }
                         scrollPane() {
                             editorPane(id: "editorOutput", editable: false, font: font, background: new java.awt.Color(255, 255, 220))
@@ -303,23 +309,6 @@ input.eachLine{
             }
         }
         return result;
-    }
-
-    public void pasteInputAction() {
-        swing.doLater {
-            editorInput.text = getClipboardContents();
-            evaluateRealTime()
-        }
-    }
-
-
-
-
-    public void copyAction() {
-        swing.doLater {
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(new StringSelection(editorOutput.text), null)
-        }
     }
 
     public void evaluateRealTime() {
