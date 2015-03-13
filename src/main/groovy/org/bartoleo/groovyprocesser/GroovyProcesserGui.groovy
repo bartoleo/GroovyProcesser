@@ -55,6 +55,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
             frame(title: "Groovy Processer", pack: true, show: true,
                     defaultCloseOperation: EXIT_ON_CLOSE, id: "frame",
                     extendedState: JFrame.MAXIMIZED_BOTH,
+//                    alwaysOnTop: true, //experiment
                     preferredSize: [width, height]) {
 
                 actionUndo = swing.action(name: 'Undo',  smallIcon: imageIcon(resource:'icons/arrow_undo.png', class:this), accelerator: menuModifier + 'Z') {
