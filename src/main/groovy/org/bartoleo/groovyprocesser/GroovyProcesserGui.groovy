@@ -175,7 +175,9 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                     menu('Options', mnemonic: 'O') {
 //                        menuItem(action: actionEditConnections)
-//                        checkBoxMenuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
+                        checkBoxMenuItem('Run Every Change', id:'chkRunEveryChangeMenu', state:true, actionPerformed: {
+                            chkRunEveryChange.selected = chkRunEveryChangeMenu.state
+                        })
 //                        menuItem(action: actionOptionsSetTitle)
 //                        //menuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
 //               menuItem 'Preferences'
@@ -217,7 +219,9 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                                     button(text: "load", action: actionOpenGroovy)
                                     button(text: "save", action: actionSaveAs)
                                     separator()
-                                    checkBox(id: 'chkRunEveryChange', text: 'Run Every Change', selected: true)
+                                    checkBox(id: 'chkRunEveryChange', text: 'Run Every Change', selected: true, actionPerformed: {
+                                        chkRunEveryChangeMenu.state = chkRunEveryChange.selected
+                                    })
                                     separator()
                                     label 'Choose a file:'
                                     comboBox(id: 'cmbFile', actionPerformed: {
