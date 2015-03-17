@@ -151,6 +151,19 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     System.exit(0)
                 }
 
+                //su mac os x non andrebbe gestito nel menu ma utilizzando aboutHandler dell'application
+                actionAbout = swing.action(
+                        name: 'About',
+                        mnemonic: 'A'
+                ) {
+                    def version = "0.1.0"
+                    def pane = swing.optionPane()
+                    // work around GROOVY-1048
+                    pane.setMessage('Groovy Processer\nVersion ' + version)
+                    def dialog = pane.createDialog(frame, 'About GroovyConsole')
+                    dialog.show()
+                }
+
                 // menu
                 menuBar {
                     menu('File', mnemonic: 'F') {
@@ -190,7 +203,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
 //                        menuItem(action: actionRemoveTab)
                     }
                     menu('Help', mnemonic: 'H') {
-//                        menuItem(action: actionAbout)
+                        menuItem(action: actionAbout)
                     }
                 }
 
