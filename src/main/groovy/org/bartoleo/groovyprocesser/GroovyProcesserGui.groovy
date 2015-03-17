@@ -203,7 +203,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                         }
                         splitPane(id: 'vsplit2', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height / 3) as int, constraints: BorderLayout.CENTER) {
                             scrollPane() {
-                                editorPane(id: "editorInput", editable: true, font: font,
+                                textArea(id: "editorInput", editable: true, font: font,
                                         keyReleased: { evt ->
                                             if ((evt.isControlDown()) && (evt.getKeyCode() == 10 || evt.getKeyCode() == 13)) {
                                                 evaluate()
@@ -229,7 +229,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                                     })
                                 }
                                 scrollPane(id: "scrollPaneEditor") {
-                                    editorPane(id: "editorGroovy", editable: true, font: font,
+                                    textArea(id: "editorGroovy", editable: true, font: font,
                                             keyReleased: { evt ->
                                                 if (evt.isControlDown() && (evt.getKeyCode() == 10 || evt.getKeyCode() == 13)) {
                                                     evaluate()
@@ -249,7 +249,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                             button(text: "copy", action: actionCopyOutput)
                         }
                         scrollPane() {
-                            editorPane(id: "editorOutput", editable: false, font: font, background: new java.awt.Color(255, 255, 220))
+                            textArea(id: "editorOutput", editable: false, font: font, background: new java.awt.Color(255, 255, 220))
                         }
                     }
                 }
