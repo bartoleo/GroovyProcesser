@@ -195,13 +195,13 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
 //                        //menuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
 //               menuItem 'Preferences'
                     }
-                    menu('View', mnemonic: 'V') {
+//                    menu('View', mnemonic: 'V') {
 //                        menuItem(action: actionPrevTab)
 //                        menuItem(action: actionNextTab)
 //                        separator()
 //                        menuItem(action: actionKeepTab)
 //                        menuItem(action: actionRemoveTab)
-                    }
+//                    }
                     menu('Help', mnemonic: 'H') {
                         menuItem(action: actionAbout)
                     }
