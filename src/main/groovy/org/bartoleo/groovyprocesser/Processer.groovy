@@ -192,6 +192,25 @@ class Processer {
 
     }
 
+    public String capitalize(String pLine){
+
+        if (!pLine) {
+            return ""
+        }
+
+        return WordUtils.capitalize(pLine);
+
+    }
+
+    public String decapitalize(String pLine){
+
+        if (!pLine) {
+            return ""
+        }
+
+        return Introspector.decapitalize(pLine);
+
+    }
 
     public String toPropertyName(String pLine) {
         String propertyName
