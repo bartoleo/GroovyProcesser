@@ -13,10 +13,15 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.prefs.Preferences
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE
 
 class GroovyProcesserGui implements ProcesserOutputInterface {
+
+    private static final String EDITOR_FONT_SIZE = "editor.font.size"
+    private static final String LOOK_AND_FEEL = "look.and.feel"
+
     def swing;
     Font font
     String lastInputText
@@ -25,9 +30,15 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
     Processer processer
     final ThreadPoolExecutor executor
     AtomicInteger executionProgr
+    String lookAndFeel
+
+    static private Preferences prefs = Preferences.userNodeForPackage(Console)
 
     public GroovyProcesserGui() {
-        font = new Font("Courier", Font.PLAIN, 13)
+
+        int fontSize = prefs.getInt(EDITOR_FONT_SIZE, 13)
+
+        font = new Font("Courier", Font.PLAIN, fontSize)
         swing = new SwingBuilder()
         lastInputText = ""
         lastGroovyText = ""
@@ -42,6 +53,9 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
         System.setProperty("apple.laf.useScreenMenuBar", "true")
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "GroovyProcesser")
 
+        lookAndFeel = prefs.get(LOOK_AND_FEEL, UIManager.getSystemLookAndFeelClassName())
+        UIManager.setLookAndFeel(lookAndFeel)
+
         int height = 800
         int width = 1024
 
@@ -51,14 +65,14 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                 Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()).toLowerCase() + ' '
 
         swing.edt {
-            //lookAndFeel 'nimbus'
+//            lookAndFeel 'nimbus'
             frame(title: "Groovy Processer", pack: true, show: true,
                     defaultCloseOperation: EXIT_ON_CLOSE, id: "frame",
                     extendedState: JFrame.MAXIMIZED_BOTH,
 //                    alwaysOnTop: true, //experiment
                     preferredSize: [width, height]) {
 
-                actionUndo = swing.action(name: 'Undo',  smallIcon: imageIcon(resource:'icons/arrow_undo.png', class:this), accelerator: menuModifier + 'Z') {
+                def actionUndo = swing.action(name: 'Undo', smallIcon: imageIcon(resource: 'icons/arrow_undo.png', class: this), accelerator: menuModifier + 'Z') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy) {
@@ -74,7 +88,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
 
                 }
 
-                actionRedo = swing.action(name: 'Redo',  smallIcon: imageIcon(resource:'icons/arrow_redo.png', class:this), accelerator: menuModifier + 'Y') {
+                def actionRedo = swing.action(name: 'Redo', smallIcon: imageIcon(resource: 'icons/arrow_redo.png', class: this), accelerator: menuModifier + 'Y') {
                     def undoManager
                     def component = swing.frame.mostRecentFocusOwner
                     if (component == swing.editorGroovy) {
@@ -89,11 +103,19 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionRun = swing.action(name: 'Run',  smallIcon: imageIcon(resource:'icons/script_go.png', class:this), accelerator: shortcut('ENTER')) {
+                def actionFontLarger = swing.action(name: 'Font Larger', smallIcon: imageIcon(resource: 'icons/plus.png', class: this), accelerator: menuModifier + 'ADD') {
+                    changeFont(font.size + 2)
+                }
+
+                def actionFontSmaller = swing.action(name: 'Font Smaller', smallIcon: imageIcon(resource: 'icons/minus.png', class: this), accelerator: shortcut('MINUS')) {
+                    changeFont(font.size - 2)
+                }
+
+                def actionRun = swing.action(name: 'Run', smallIcon: imageIcon(resource: 'icons/script_go.png', class: this), accelerator: shortcut('ENTER')) {
                     evaluate()
                 }
 
-                actionOpenInput = swing.action(name: 'Load Input', smallIcon: imageIcon(resource:'icons/folder_page.png', class:this)) {
+                def actionOpenInput = swing.action(name: 'Load Input', smallIcon: imageIcon(resource: 'icons/folder_page.png', class: this)) {
                     def openFileDialog = new JFileChooser(
                             dialogTitle: "Choose an input file",
                             fileSelectionMode: JFileChooser.FILES_ONLY)
@@ -106,7 +128,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionOpenGroovy = swing.action(name: 'Load Groovy', smallIcon: imageIcon(resource:'icons/folder_page.png', class:this)) {
+                def actionOpenGroovy = swing.action(name: 'Load Groovy', smallIcon: imageIcon(resource: 'icons/folder_page.png', class: this)) {
                     def openFileDialog = new JFileChooser(
                             dialogTitle: "Choose an input groovy file",
                             currentDirectory: new File(baseDir),
@@ -121,7 +143,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     }
                 }
 
-                actionSaveAs = swing.action(name: 'Save As', smallIcon: imageIcon(resource:'icons/disk.png', class:this)) {
+                def actionSaveAs = swing.action(name: 'Save As', smallIcon: imageIcon(resource: 'icons/disk.png', class: this)) {
                     def saveFileDialog = new JFileChooser(
                             dialogTitle: "Choose file to save",
                             currentDirectory: new File(baseDir),
@@ -137,22 +159,22 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                     loadCmbFile()
                 }
 
-                actionCopyOutput = swing.action(name: 'Copy', smallIcon: imageIcon(resource:'icons/page_copy.png', class:this)) {
+                def actionCopyOutput = swing.action(name: 'Copy', smallIcon: imageIcon(resource: 'icons/page_copy.png', class: this)) {
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new StringSelection(editorOutput.text), null)
                 }
 
-                actionPasteInput = swing.action(name: 'Paste', smallIcon: imageIcon(resource:'icons/page_paste.png', class:this)) {
+                def actionPasteInput = swing.action(name: 'Paste', smallIcon: imageIcon(resource: 'icons/page_paste.png', class: this)) {
                     editorInput.text = getClipboardContents();
                     evaluateRealTime()
                 }
 
-                actionExit = swing.action(name: 'Exit') {
+                def actionExit = swing.action(name: 'Exit') {
                     System.exit(0)
                 }
 
                 //su mac os x non andrebbe gestito nel menu ma utilizzando aboutHandler dell'application
-                actionAbout = swing.action(
+                def actionAbout = swing.action(
                         name: 'About',
                         mnemonic: 'A'
                 ) {
@@ -187,25 +209,31 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
 //                        menuItem(action: actionClearOutput)
                     }
                     menu('Options', mnemonic: 'O') {
-//                        menuItem(action: actionEditConnections)
-                        checkBoxMenuItem('Run Every Change', id:'chkRunEveryChangeMenu', state:true, actionPerformed: {
+                        checkBoxMenuItem('Run Every Change', id: 'chkRunEveryChangeMenu', state: true, actionPerformed: {
                             chkRunEveryChange.selected = chkRunEveryChangeMenu.state
                         })
-//                        menuItem(action: actionOptionsSetTitle)
-//                        //menuItem(id:'menuStopOnError', action: actionOptionsStopOnError)
-//               menuItem 'Preferences'
                     }
-//                    menu('View', mnemonic: 'V') {
-//                        menuItem(action: actionPrevTab)
-//                        menuItem(action: actionNextTab)
-//                        separator()
-//                        menuItem(action: actionKeepTab)
-//                        menuItem(action: actionRemoveTab)
-//                    }
+                    menu('View', mnemonic: 'V') {
+                        menuItem(action: actionFontLarger, mnemonic: '+')
+                        menuItem(action: actionFontSmaller, mnemonic: '-')
+                        menu('Look & Feel', id: 'subMenu') {
+                        }
+                    }
                     menu('Help', mnemonic: 'H') {
                         menuItem(action: actionAbout)
                     }
                 }
+
+                //adding submenu with installed look&feel
+                def group = buttonGroup()
+                UIManager.installedLookAndFeels.each { laf ->
+                    swing.subMenu.add(
+                            radioButtonMenuItem(buttonGroup: group, selected: (laf.className == lookAndFeel),
+                                    action(name: laf.name, closure: { changeLookAndFeel(laf.name, laf.className) })
+                            )
+                    )
+                }
+
 
                 splitPane(id: 'vsplit1', orientation: JSplitPane.VERTICAL_SPLIT, dividerLocation: (height / 3 * 2) as int) {
                     panel {
@@ -270,7 +298,9 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
         }
 
         //add line number to groovy editor
-        swing.scrollPaneEditor.rowHeaderView = new TextLineNumber(swing.editorGroovy)
+        TextLineNumber textLineNumber = new TextLineNumber(swing.editorGroovy)
+        textLineNumber.setUpdateFont(true)
+        swing.scrollPaneEditor.rowHeaderView = textLineNumber
 
         swing.editorGroovy.getDocument().addUndoableEditListener(editorGroovyUndoManager);
         swing.editorInput.getDocument().addUndoableEditListener(editorInputUndoManager);
@@ -300,7 +330,7 @@ input.eachLine{
         model.removeAllElements();
         swing.cmbFile.addItem("")
         File fileDir = new File(baseDir)
-        if (fileDir.exists()){
+        if (fileDir.exists()) {
             def p = ~/.*\.groovy/
             fileDir.eachFileMatch(p) {
                 swing.cmbFile.addItem(it.name)
@@ -398,6 +428,22 @@ input.eachLine{
             editorOutput.setCaretPosition(0)
             editorOutput.moveCaretPosition(0)
         }
+    }
+
+    public void changeFont(Integer pFontSize) {
+        prefs.putInt(EDITOR_FONT_SIZE, pFontSize)
+        font = new Font("Courier", Font.PLAIN, pFontSize)
+        swing.doLater {
+            editorInput.font = font
+            editorGroovy.font = font
+            editorOutput.font = font
+        }
+    }
+
+    public void changeLookAndFeel(String pName, String pClassName) {
+        prefs.put(LOOK_AND_FEEL, pClassName)
+        swing.optionPane().showMessageDialog(null, "Close and reopen application to use new Look And Feel '${pName}'",
+                "Look and Feel changed", JOptionPane.INFORMATION_MESSAGE)
     }
 
 

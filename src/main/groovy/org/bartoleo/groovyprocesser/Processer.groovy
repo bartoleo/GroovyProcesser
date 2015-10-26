@@ -160,6 +160,7 @@ class Processer {
 
         try {
 
+            binding.setVariable("p", this)
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
             binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pProcesserOutput.setInput(valore); })
