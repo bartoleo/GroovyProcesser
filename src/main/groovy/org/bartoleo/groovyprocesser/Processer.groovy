@@ -149,8 +149,6 @@ class Processer {
     def process(String pInput, def pGroovyScript, ProcesserOutputInterface pProcesserOutput) {
         String result
 
-//        System.out.println("inizio")
-
         //redirect output to stream, so I'll read output written with print
         def saveOut = System.out
         def buf = new ByteArrayOutputStream()
@@ -160,7 +158,7 @@ class Processer {
 
         try {
 
-            binding.setVariable("p", this)
+            binding.setVariable("gp", this)
             binding.setVariable("processer", this)
             binding.setVariable("input", evaluateInput(pInput))
             binding.setVariable("setInput", { valore -> binding.setVariable("input", valore); pProcesserOutput.setInput(valore); })
@@ -186,8 +184,6 @@ class Processer {
         } finally {
             System.out = saveOut
         }
-
-//        System.out.println("fine")
 
         return result
 

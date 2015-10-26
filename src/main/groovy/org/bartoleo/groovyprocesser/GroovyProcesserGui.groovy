@@ -31,6 +31,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
     final ThreadPoolExecutor executor
     AtomicInteger executionProgr
     String lookAndFeel
+    Properties properties
 
     static private Preferences prefs = Preferences.userNodeForPackage(Console)
 
@@ -46,6 +47,10 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
         processer = new Processer(baseDir)
         executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>())
         executionProgr = new AtomicInteger(0)
+
+        properties = new Properties()
+        properties.load(this.getClass().getResourceAsStream('application.properties'))
+
     }
 
     public void showGui() {
@@ -178,7 +183,7 @@ class GroovyProcesserGui implements ProcesserOutputInterface {
                         name: 'About',
                         mnemonic: 'A'
                 ) {
-                    def version = "0.1.0"
+                    def version = properties.getProperty("version")
                     def pane = swing.optionPane()
                     // work around GROOVY-1048
                     pane.setMessage('Groovy Processer\nVersion ' + version)

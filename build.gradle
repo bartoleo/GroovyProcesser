@@ -39,6 +39,18 @@ dependencies {
 }
 
 
+task(copyResources, type: Copy) {
+    destinationDir = file("$buildDir/classes")
+    // text files requiring filtering
+    into('main') {
+        from('src/main/groovy')
+        include('**/*.properties')
+        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: ['version': groovyprocesserVersion])
+    }
+    outputs.upToDateWhen { false }
+}
+compileGroovy.dependsOn(copyResources)
+
 run {
         // gradle run -Dmyvariable=myvalue -Dexec.args="arg1 arg2 arg3"
 
