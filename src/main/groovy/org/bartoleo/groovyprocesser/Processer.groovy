@@ -152,7 +152,7 @@ class Processer {
         //redirect output to stream, so I'll read output written with print
         def saveOut = System.out
         def buf = new ByteArrayOutputStream()
-        def newOut = new PrintStream(buf)
+        def newOut = new PrintStream(buf, false, "UTF-8")
         System.out = newOut
 
 
