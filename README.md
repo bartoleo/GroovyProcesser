@@ -37,6 +37,15 @@ It executes the text below the directive as a groovy script and returns the retu
 It executes the text below the directive as a shell and returns the stdout of the execution as input
 
 
-
-
+Processor methods
+-----------------
+You can use these methods to create code templates:
+- processer.capitalize(<string>)
+- processer.decapitalize(<string>)
+- processer.toPropertyName(<string>)
+- processer.toGetter(<string>)
+- processer.toSetter(<string>,<value>)
+- processer.toCamelCase(<string>)
+- processer.toSnakeCase(<string>)
+- processer.toSausageCase(<string>)
 
