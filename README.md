@@ -48,4 +48,7 @@ You can use these methods to create code templates:
 - processer.toCamelCase(<string>)
 - processer.toSnakeCase(<string>)
 - processer.toSausageCase(<string>)
+- processor.rpad(<string>, <length>, <character_filler>)
+- processor.lpad(<string>, <length>, <character_filler>)
 
+You can also use the 'gp' alias instead of 'processer'

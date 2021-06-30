@@ -264,5 +264,69 @@ class Processer {
         text.replaceAll( /([A-Z])/, /-$1/ ).toLowerCase().replaceAll( /^-/, '' )
     }
 
+    public String nvlString(Object pValue){
+        if (pValue == null){
+            return ''
+        }
+
+        if (pValue instanceof String){
+            return pValue
+        }
+
+        return pValue.toString
+
+    }
+
+    /**
+     * fills string, adding to right a character
+     * @param pValue
+     * @param pTargetLength
+     * @param pCharacterFiller
+     * @return
+     */
+    public String rpad(String pValue, int pTargetLength, String pCharacterFiller) {
+
+        String value;
+
+        value = nvlString(pValue)
+
+        if (value.length() <= pTargetLength) {
+            return value.padRight(pTargetLength, pCharacterFiller)
+        }
+
+        return extractSubstring(value, pTargetLength)
+    }
+
+    public String extractSubstring(String pValue, int pLength) {
+        String result;
+
+        result = nvlString(pValue)
+
+        if (result.length() > pLength) {
+            result = result.substring(0, pLength);
+        }
+
+        return result
+    }
+
+    /**
+     * fills string, adding to left a character
+     * @param pValue
+     * @param pTargetLength
+     * @param pCharacterFiller
+     * @return
+     */
+    public String lpad(String pValue, int pTargetLength, String pCharacterFiller) {
+
+        String valore;
+
+        valore = nvlString(pValue)
+
+        if (valore.length() <= pTargetLength) {
+            return valore.padLeft(pTargetLength, pCharacterFiller)
+        }
+
+        return extractSubstring(valore, pTargetLength)
+    }
 
 }
