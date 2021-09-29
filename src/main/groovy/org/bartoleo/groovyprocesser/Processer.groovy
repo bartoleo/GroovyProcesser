@@ -174,7 +174,7 @@ class Processer {
                 result = ""
             }
 
-            result += buf.toString()
+            result += buf.toString('UTF-8')
 
             System.out = saveOut
             pProcesserOutput.setOutput(result)
