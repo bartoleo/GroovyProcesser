@@ -199,6 +199,26 @@ class Processer {
 
     }
 
+    public String uncapitalize(String pLine){
+
+        if (!pLine) {
+            return ""
+        }
+
+        return WordUtils.uncapitalize(pLine);
+
+    }
+
+    public String toWords(String pLine){
+
+        if (!pLine) {
+            return ""
+        }
+
+        return toSnakeCase(pLine).replace("_", " ");
+
+    }
+
     public String decapitalize(String pLine){
 
         if (!pLine) {
