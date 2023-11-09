@@ -8,6 +8,7 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.codehaus.groovy.tools.LoaderConfiguration
 import org.codehaus.groovy.tools.RootLoader
+import groovy.json.JsonOutput;
 
 import java.beans.Introspector
 
@@ -347,6 +348,34 @@ class Processer {
         }
 
         return extractSubstring(valore, pTargetLength)
+    }
+
+    /**
+     * parse a Json String to object (Map or List)
+     * @param pValue
+     * @return
+     */
+    public Object parseJson(String pValue){
+        def slurper = new JsonSlurper()
+        return slurper.parseText(pValue)
+    }
+
+    /**
+     * formats a value to Json
+     * @param pValue
+     * @return
+     */
+    public String toJson(Object pValue){
+       return JsonOutput.toJson(pValue)
+    }
+
+    /**
+     * formats a value to Json, pretty print
+     * @param pValue
+     * @return
+     */
+    public String toJsonPrettyPrint(Object pValue){
+       return JsonOutput.prettyPrint(pValue)
     }
 
 }

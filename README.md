@@ -50,5 +50,8 @@ You can use these methods to create code templates:
 - processer.toSausageCase(<string>)
 - processor.rpad(<string>, <length>, <character_filler>)
 - processor.lpad(<string>, <length>, <character_filler>)
+- processor.parseJson(<string>)
+- processor.toJson(<object>)
+- processor.toJsonPrettyPrint(<object>)
 
 You can also use the 'gp' alias instead of 'processer'
