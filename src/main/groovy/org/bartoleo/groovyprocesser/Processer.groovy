@@ -8,7 +8,8 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.codehaus.groovy.tools.LoaderConfiguration
 import org.codehaus.groovy.tools.RootLoader
-import groovy.json.JsonOutput;
+import groovy.json.JsonOutput
+import org.yaml.snakeyaml.Yaml
 
 import java.beans.Introspector
 
@@ -361,6 +362,16 @@ class Processer {
     }
 
     /**
+     * parse a Yaml String to object (Map or List)
+     * @param pValue
+     * @return
+     */
+    public Object parseYaml(String pValue){
+        Yaml parser = new Yaml()
+        return parser.load(pValue)
+    }
+
+    /**
      * formats a value to Json
      * @param pValue
      * @return
@@ -375,7 +386,7 @@ class Processer {
      * @return
      */
     public String toJsonPrettyPrint(Object pValue){
-       return JsonOutput.prettyPrint(pValue)
+       return JsonOutput.prettyPrint(toJson(pValue))
     }
 
 }
